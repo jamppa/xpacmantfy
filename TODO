@@ -1,0 +1,13 @@
+#
+#	TODO for xpacmantfy v0.2
+#
+#	Jani Arvonen
+
+	- check interval as a user parameter
+	- window location as a user parameter
+	- window alpha as a user parameter
+	- window fg, bg and border color as a user parameter
+	- possibility to define pacman binary location (user parameter)
+	- shadow for the window if effects enabled (compiz or something like that..)
+
+
