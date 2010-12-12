@@ -14,7 +14,7 @@ static void get_pacman_command(char* command_buf, size_t buf_size);
 static int add_package(PacmanUpdate* pacman_update, char* buffer);
 static PacmanPackage* del_package(PacmanPackage* package);
 static PacmanPackage* new_package(char* buffer);
-static int has_updates_available(FILE* pacman_pipe, char* buffer, size_t buf_size);
+static int has_updates_available(char* buffer, size_t buf_size);
 
 int is_pacman_accessible(void){
 
@@ -92,11 +92,16 @@ static int read_updates_from_pipe(PacmanUpdate* pacman_update){
 	}
 
 	while(fgets(buffer, sizeof(buffer), pacman_pipe) != 0){
-		if(has_updates_available(pacman_pipe, buffer, sizeof(buffer))){
-			pacman_update->has_packages = 1;
-			if(!add_package(pacman_update, buffer))
-				fprintf(stderr, "%s: Error while adding package to list!\n", XPACMANTFY);
-			continue;
+
+		if(strncmp(buffer, PACMAN_UPGRADE_IDENTIFIER, strlen(PACMAN_UPGRADE_IDENTIFIER)) == 0){
+			if(fgets(buffer, sizeof(buffer), pacman_pipe) != 0){
+				if(has_updates_available(buffer, sizeof(buffer))){
+					pacman_update->has_packages = 1;
+					if(!add_package(pacman_update, buffer))
+						fprintf(stderr, "%s: Error while adding package to list!\n", XPACMANTFY);
+					continue;
+				}
+			}
 		}
 
 		if(pacman_update->has_packages){
@@ -159,18 +164,12 @@ static PacmanPackage* new_package(char* buffer){
 	return package;
 }
 
-static int has_updates_available(FILE* pacman_pipe, char* buffer, size_t buf_size){
+static int has_updates_available(char* buffer, size_t buf_size){
 
 	int has_updates = 0;
-	fgets(buffer, buf_size, pacman_pipe);	
-	if(strncmp(buffer, PACMAN_UPGRADE_IDENTIFIER, 
-				strlen(PACMAN_UPGRADE_IDENTIFIER)) == 0){
-
-		fgets(buffer, sizeof(buffer), pacman_pipe);
-		if(strncmp(buffer, PACMAN_NOTHING_TO_DO, 
-				strlen(PACMAN_NOTHING_TO_DO)) != 0){
-			has_updates = 1;	
-		}
+	if(strncmp(buffer, PACMAN_NOTHING_TO_DO, 
+			strlen(PACMAN_NOTHING_TO_DO)) != 0){
+		has_updates = 1;	
 	}
 	return has_updates;
 }
